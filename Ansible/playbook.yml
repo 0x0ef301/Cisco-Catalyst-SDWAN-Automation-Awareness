@@ -1,0 +1,93 @@
+---
+- hosts: vmanage_group
+  gather_facts: no
+  connection: network_cli
+  tasks:
+    - name: Retrieve realtime control connections
+      cisco.sastre.show_realtime:
+        address: "{{ ansible_host }}"
+        user: "{{ ansible_user }}"
+        password: "{{ ansible_password }}"
+        cmd: [ 'control', 'connections' ]
+        system_ip: "10.10.1.13"
+      delegate_to: localhost
+      register: show_realtime_result
+      tags:
+        - control-connections
+        - control-connections:debug
+        - debug
+
+    - name: Display realtime control connections
+      ansible.builtin.debug:
+        msg: "{{ show_realtime_result.stdout_lines }}"
+      tags:
+        - control-connections
+        - control-connections:debug
+        - debug
+
+    - name: Show show_realtime_result return value
+      ansible.builtin.debug:
+        var: show_realtime_result
+      tags:
+        - control-connections:debug
+        - debug
+        - never
+
+    - name: Assert all control connections are up
+      ansible.builtin.assert:
+        that:
+          - item.column_6 == 'up'
+        success_msg: "{{ item.column_0 }} control connection to {{ item.column_1 }} ({{ item.column_3 }}) is up"
+        fail_msg: "{{ item.column_0 }} control connection to {{ item.column_1 }} ({{ item.column_3 }}) is down"
+        quiet: true
+      loop: "{{ show_realtime_result.tables[0].data }}"
+      tags:
+        - control-connections
+        - control-connections:debug
+        - debug
+
+    - name: Retrieve realtime tunnel stats
+      cisco.sastre.show_realtime:
+        address: "{{ ansible_host }}"
+        user: "{{ ansible_user }}"
+        password: "{{ ansible_password }}"
+        cmd: [ 'app-route', 'stats' ]
+        system_ip: "10.10.1.13"
+      delegate_to: localhost
+      register: show_realtime_result
+      tags:
+        - app-route-stats
+        - app-route-stats:debug
+        - debug
+
+    - name: Display realtime tunnel stats
+      ansible.builtin.debug:
+        msg: "{{ show_realtime_result.stdout_lines }}"
+      tags:
+        - app-route-stats
+        - app-route-stats:debug
+        - debug
+
+    - name: Show show_realtime_result return value
+      ansible.builtin.debug:
+        var: show_realtime_result
+      tags:
+        - app-route-stats:debug
+        - debug
+        - never
+
+    - name: Assert all tunnels meet latency requirement
+      ansible.builtin.assert:
+        that:
+          - item.column_7 | int <= 130
+        success_msg: "{{ item.column_0 }} tunnel stats to {{ item.column_2 }} ({{ item.column_3 }} -> {{ item.column_4 }}) is under 130ms"
+        fail_msg: "{{ item.column_0 }} tunnel stats to {{ item.column_2 }} ({{ item.column_3 }} -> {{ item.column_4 }}) is over 130ms"
+        quiet: true
+      loop: "{{ show_realtime_result.tables[0].data | selectattr('column_1', 'eq', '0') }}"
+      tags:
+        - app-route-stats
+        - app-route-stats:debug
+        - debug
+
+...
+

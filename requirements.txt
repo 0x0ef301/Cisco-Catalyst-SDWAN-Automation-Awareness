@@ -1,0 +1,5 @@
+ansible-core>=2.15
+ansible-pylibssh>=1.1
+jupyterlab>=4.0
+
+

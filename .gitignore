@@ -1,3 +1,6 @@
+CLI/logs
+CLI/data
+
 # IDE project files
 .vscode/
 .idea

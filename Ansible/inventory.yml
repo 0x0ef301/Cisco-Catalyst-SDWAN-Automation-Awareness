@@ -1,0 +1,10 @@
+---
+all:
+  hosts:
+    vmanage_group:
+      ansible_host: 10.10.20.90
+      ansible_network_os: ios
+      vmanage_port: 443
+      ansible_user: admin
+      ansible_password: C1sco12345
+...
